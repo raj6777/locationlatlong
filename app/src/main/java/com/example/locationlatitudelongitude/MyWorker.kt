@@ -39,7 +39,7 @@ class MyWorker(context: Context, workerParams: WorkerParameters) : Worker(contex
                 @RequiresApi(Build.VERSION_CODES.O)
                 override fun onLocationResult(locationResult: LocationResult) {
                     super.onLocationResult(locationResult)
-                    Log.e("location data", "location")
+                    Log.e("location data", "location workmanager")
                     Log.e("date time", LocalDateTime.now().toString())
                     if (locationResult.locations.isNotEmpty()) {
                         val location: Location? = locationResult.lastLocation

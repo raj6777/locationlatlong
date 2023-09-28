@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">locationlatitudelongitude</string>
+    <string name="enable_gps">gps is enable </string>
+    <string name="required_for_this_app">To continue,turn on device
+        location,which uses google location service</string>
+    <string name="enable_now">OK</string>
+    <string name="dismiss">NO THANKS </string>
 </resources>
