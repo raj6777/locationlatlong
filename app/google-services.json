@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "554817618877",
+    "project_id": "fir-imagepicker-android",
+    "storage_bucket": "fir-imagepicker-android.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:554817618877:android:b2c131c0aba164349708d4",
+        "android_client_info": {
+          "package_name": "com.example.locationlatitudelongitude"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlB-5y61ZUcfzf-H6KUeHzscz-oCfzp1o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

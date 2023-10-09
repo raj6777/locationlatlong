@@ -1,4 +1,4 @@
-package com.example.locationlatitudelongitude.adapter
+package com.example.locationlatitudelongitude.room.adapter
 
 import android.view.LayoutInflater
 import android.view.View
