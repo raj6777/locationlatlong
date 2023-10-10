@@ -25,15 +25,17 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.room.Database
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.CoroutineScope
@@ -57,6 +59,11 @@ class MainActivity : AppCompatActivity() {
     lateinit var imageView:ImageView
     private var storageReference: StorageReference? = null
     private var database: FirebaseDatabase? = null
+    private var getUploadId=""
+    private val array=ArrayList<String>()
+    private var imageUrl=""
+    lateinit var retrive:Button
+
 
     private val locationPermissionCode = 2
     private val locationRequestInterval = 600000// 10 minutes in millisecondse
@@ -75,6 +82,7 @@ class MainActivity : AppCompatActivity() {
         val button1: Button = findViewById(R.id.getLocationList)
         val btnchoosefile:Button=findViewById(R.id.choosefile)
         val uploadfile:Button=findViewById(R.id.uploadfile)
+        retrive=findViewById(R.id.retrivedata)
         imageView=findViewById(R.id.imageView)
         tvGpsLocation = findViewById(R.id.textView)
         database=FirebaseDatabase.getInstance()
@@ -103,6 +111,7 @@ class MainActivity : AppCompatActivity() {
         uploadfile.setOnClickListener{
             Uploadfile()
         }
+
         /*  GlobalScope.launch {
               database.locationdao().deleteAllData()
           }*/
@@ -211,11 +220,14 @@ private fun Uploadfile() {
 
         storageReference = FirebaseStorage.getInstance().reference
 
+
         val sRef = storageReference!!.child(folderPath +
                 (Settings.Secure.getString(contentResolver!!, Settings.Secure.ANDROID_ID) + System.currentTimeMillis()).toString() +
                 "." + getFileExtension(filePathimage))
 
-        val mDatabase=database?.getReference()
+        val mDatabase=database!!.getReference()
+
+     /*   retrivedata(mDatabase)*/
         sRef.putFile(filePathimage!!)
             .addOnSuccessListener { taskSnapshot ->
                 progressDialog.dismiss()
@@ -224,20 +236,30 @@ private fun Uploadfile() {
 
                 // Get the download URL of the uploaded image
                 taskSnapshot.storage.downloadUrl.addOnSuccessListener { downloadUrl ->
-                    val imageUrl = downloadUrl.toString()
-                    Log.e("url",imageUrl.toString())
+                    imageUrl = downloadUrl.toString()
+                    array.add(imageUrl)
 
                     // Create an instance of your data class
-                    val upload = UploadedFile(imageUrl)
-
+                    val upload = UploadedFile(array)
                     // Push the data to the Firebase Realtime Database
                     Log.e("uplodaded id",mDatabase!!.push().key.toString())
-                    val uploadId: String = mDatabase!!.push().key ?: ""
-                    mDatabase.child(uploadId).setValue(upload)
+                    val uploadId: String =Settings.Secure.getString(contentResolver!!, Settings.Secure.ANDROID_ID)
+                    mDatabase.child(uploadId).setValue((upload))
 
+                    /*array.add(listOf(imageUrl).toString())*/
+                    /*getUploadId=mDatabase.child(uploadId).key.toString()*/
+                    /*Log.e("arrayof data",array.toString())*/
 
+                    retrive.setOnClickListener{
+                        val intent = Intent(this@MainActivity, RetriveActivity::class.java)
+                        intent.putExtra("key", array)
+                        startActivity(intent)
+                    }
                 }
+
+
             }
+
             .addOnFailureListener { exception ->
                 progressDialog.dismiss()
                 Toast.makeText(applicationContext, "Something went wrong", Toast.LENGTH_LONG).show()
@@ -246,10 +268,26 @@ private fun Uploadfile() {
                 val progress = 100.0 * taskSnapshot.bytesTransferred / taskSnapshot.totalByteCount
                 progressDialog.setMessage("Uploaded " + progress.toInt() + "%...")
             }
+
+
+
     } else {
         Toast.makeText(applicationContext, "No files are selected", Toast.LENGTH_LONG).show()
     }
-}    @RequiresApi(Build.VERSION_CODES.P)
+}
+/*    fun retrivedata(databaseReference: DatabaseReference){
+        databaseReference.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val post: UploadedFile? = dataSnapshot.getValue(UploadedFile::class.java)
+                System.out.println(post)
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                println("The read failed: " + databaseError.code)
+            }
+        })
+    }*/
+    @RequiresApi(Build.VERSION_CODES.P)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when(requestCode)
@@ -258,6 +296,7 @@ private fun Uploadfile() {
                 when(resultCode){
                    Activity.RESULT_OK->{
                        filePathimage = data!!.getData();
+
                        try {
                            val source = ImageDecoder.createSource(this.contentResolver, filePathimage!!)
                            val bitmap = ImageDecoder.decodeBitmap(source)
